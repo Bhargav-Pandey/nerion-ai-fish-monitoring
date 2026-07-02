@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 
 # Optional Groq client support
 try:
+    
     from groq import Groq
     _groq_available = True
 except ImportError:

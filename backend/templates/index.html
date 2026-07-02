@@ -1,202 +1,536 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AquaGuard AI | Enterprise</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nerion AI | Command Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
 <body>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <div class="ambient-glow glow-1"></div>
-    <div class="ambient-glow glow-2"></div>
+<!-- ══════════════════════════════════
+     LOGIN VIEW (shown when unauthenticated)
+══════════════════════════════════ -->
+<div id="login-view" class="view-layer">
+  <div class="login-card">
 
-    <div id="login-view" class="view-layer">
-        <div class="glass-panel login-card">
-            <div class="logo-large">🐟 AquaGuard <span class="highlight">AI</span></div>
-            <p class="subtitle" style="text-align: center;">Secure Admin Access</p>
-            
-            <div class="input-group">
-                <label>Admin ID</label>
-                <input type="text" placeholder="Enter ID" id="admin-id">
-            </div>
-            <div class="input-group">
-                <label>Password</label>
-                <input type="password" placeholder="••••••••" id="admin-pass">
-            </div>
-            
-            <div id="login-error" style="color: var(--danger-color); font-size: 13px; text-align: center; margin-bottom: 10px; display: none;"></div>
-            <button class="btn-primary" onclick="appAuth.login()">ACCESS SYSTEM</button>
-        </div>
+    <div class="login-logo">
+      <span class="fish-icon">🐠</span>
+      <h1>NERION</h1>
+      <p>MONITORING SYSTEM v2.1</p>
     </div>
 
-    <div id="main-view" class="view-layer hidden">
-        
-        <nav class="navbar glass-panel">
-            <div class="menu-btn" onclick="appNav.toggleDrawer()">☰</div>
-            <div class="logo">AquaGuard <span class="highlight">AI</span></div>
-            <div class="nav-profile">👤</div>
-        </nav>
+    <div class="login-divider"></div>
 
-        <div id="sidebar-overlay" class="hidden" onclick="appNav.toggleDrawer()"></div>
-        <aside id="sidebar" class="glass-panel hidden">
-            <div class="sidebar-header">
-                <h3>Admin Portal</h3>
-                <button class="close-btn" onclick="appNav.toggleDrawer()">✕</button>
-            </div>
-            <ul class="drawer-links">
-                <li onclick="alert('Pairing mode activated...')">🔌 Pair Hardware (ESP32)</li>
-                <li>🌊 Tank Profiles</li>
-                <li>📜 Water Change Log</li>
-                <li>⚙️ System Settings</li>
-                <li class="logout-link" onclick="appAuth.logout()">🚪 Logout</li>
-            </ul>
-        </aside>
-
-        <main class="content-area">
-            
-            <div id="tab-home" class="tab-content active fade-in">
-                
-                <div class="header-row">
-                    <h2>Live Telemetry</h2>
-                    <div class="status-badge Warning">WARNING: Ammonia Spiking</div>
-                </div>
-
-                <button class="btn-danger pulse-anim" onclick="appAlerts.showEmergencyModal()">
-                    ⚠️ EMERGENCY ACTION REQUIRED
-                </button>
-
-                <div class="glass-panel card" style="margin-top: 20px;">
-                    <h3>📈 Live Water Quality History</h3>
-                    <div style="height: 300px; width: 100%;">
-                        <canvas id="historyChart"></canvas>
-                    </div>
-                </div>
-
-                <div class="sensor-grid">
-                    <div class="glass-panel sensor-card">
-                        <div class="sensor-title">Temperature</div>
-                        <div class="sensor-value" id="card-temperature">--<span class="unit">°C</span></div>
-                        <div class="bar-bg"><div class="bar-fill" id="bar-temperature" style="width: 0%; background: var(--accent-blue);"></div></div>
-                    </div>
-                    <div class="glass-panel sensor-card" id="card-ammonia-wrap">
-                        <div class="sensor-title">Ammonia</div>
-                        <div class="sensor-value" id="card-ammonia">--<span class="unit">ppm</span></div>
-                        <div class="bar-bg"><div class="bar-fill" id="bar-ammonia" style="width: 0%; background: var(--danger-color);"></div></div>
-                    </div>
-                    <div class="glass-panel sensor-card">
-                        <div class="sensor-title">pH Level</div>
-                        <div class="sensor-value" id="card-ph">--</div>
-                        <div class="bar-bg"><div class="bar-fill" id="bar-ph" style="width: 0%; background: var(--accent-purple);"></div></div>
-                    </div>
-                    <div class="glass-panel sensor-card">
-                        <div class="sensor-title">Turbidity</div>
-                        <div class="sensor-value" id="card-turbidity">--<span class="unit">NTU</span></div>
-                        <div class="bar-bg"><div class="bar-fill" id="bar-turbidity" style="width: 0%; background: var(--accent-cyan);"></div></div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="tab-ai" class="tab-content hidden fade-in">
-                <h2>🧠 AI Medical Bay</h2>
-                <div class="glass-panel card" style="margin-bottom: 20px;">
-                    <p class="subtitle">Enter hardware values to simulate ML analysis.</p>
-                    
-                    <form onsubmit="event.preventDefault(); appAi.runDiagnosis();">
-                        <div class="input-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <div class="input-group" style="grid-column: 1 / -1;">
-                                <label>Species</label>
-                                <select id="sim-species"><option>Tilapia</option><option>Koi Carp</option></select>
-                            </div>
-                            <div class="input-group">
-                                <label>Temp (°C)</label>
-                                <input type="number" id="sim-temp" value="29.5" step="0.1">
-                            </div>
-                            <div class="input-group">
-                                <label>pH</label>
-                                <input type="number" id="sim-ph" value="7.1" step="0.1">
-                            </div>
-                            <div class="input-group">
-                                <label>Turbidity (NTU)</label>
-                                <input type="number" id="sim-turbidity" value="15.0" step="0.1">
-                            </div>
-                            <div class="input-group">
-                                <label>Ammonia (ppm)</label>
-                                <input type="number" id="sim-ammonia" value="1.2" step="0.1">
-                            </div>
-                        </div>
-                        <button type="submit" class="btn-primary" id="diag-btn">Run Diagnosis</button>
-                    </form>
-                </div>
-
-                <div id="ai-result-card" class="glass-panel card hidden fade-in" style="border-top: 4px solid var(--accent-purple);">
-                    <h3 style="color: var(--accent-purple); margin-bottom: 15px;">Diagnosis Results</h3>
-                    <p><strong>Predicted Issue:</strong> <span id="res-disease" class="highlight"></span></p>
-                    <p><strong>Danger Level:</strong> <span id="res-danger" style="color: var(--danger-color); font-weight: bold;"></span></p>
-                    <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;">
-                    <p><strong>Action Plan:</strong> <span id="res-solution"></span></p>
-                    <p style="margin-top: 10px;"><strong>Future Precautions:</strong> <span id="res-precautions"></span></p>
-
-                    <!-- NEW: AI Detailed Report -->
-                    <div id="ai-explanation-wrap" class="hidden" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
-                        <h4 style="color: var(--accent-cyan); margin-bottom: 10px;">🤖 AI Detailed Report</h4>
-                        <pre id="res-ai-explanation" style="
-                            white-space: pre-wrap;
-                            word-break: break-word;
-                            font-family: 'Poppins', sans-serif;
-                            font-size: 13px;
-                            line-height: 1.7;
-                            color: var(--text-main);
-                            background: rgba(0,0,0,0.2);
-                            padding: 15px;
-                            border-radius: 10px;
-                            margin: 0;
-                        "></pre>
-                    </div>
-                </div>
-            </div>
-
-            <div id="tab-vision" class="tab-content hidden fade-in">
-                <h2>📷 Computer Vision</h2>
-                <div class="glass-panel card vision-card">
-                    <div class="camera-feed-placeholder">
-                        <span class="icon">📹</span>
-                        <p>Camera Module Offline</p>
-                        <p class="subtitle">Connect ESP32-CAM to activate species recognition.</p>
-                    </div>
-                </div>
-            </div>
-
-        </main>
-
-        <nav class="bottom-tabs glass-panel">
-            <div class="tab-btn active" onclick="appNav.switchTab('tab-home', this)">
-                <span class="tab-icon">📊</span><span class="tab-label">Home</span>
-            </div>
-            <div class="tab-btn" onclick="appNav.switchTab('tab-ai', this)">
-                <span class="tab-icon">🧠</span><span class="tab-label">AI Bay</span>
-            </div>
-            <div class="tab-btn" onclick="appNav.switchTab('tab-vision', this)">
-                <span class="tab-icon">📷</span><span class="tab-label">Vision</span>
-            </div>
-        </nav>
-
-        <div id="emergency-modal" class="modal-overlay hidden">
-            <div class="glass-panel modal-content">
-                <h3 style="color: var(--danger-color);">⚠️ Ammonia Protocol</h3>
-                <ul class="checklist">
-                    <li><input type="checkbox"> Stop feeding immediately</li>
-                    <li><input type="checkbox"> Perform 30% water change</li>
-                    <li><input type="checkbox"> Add ammonia binder</li>
-                </ul>
-                <button class="btn-primary" style="margin-top: 20px;" onclick="appAlerts.hideEmergencyModal()">Mark Resolved</button>
-            </div>
-        </div>
-
+    <div class="fl-group">
+      <span class="fl-icon">👤</span>
+      <input type="text" id="admin-id" placeholder="username" autocomplete="username">
+      <label>ADMIN ID</label>
     </div>
 
-    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <div class="fl-group">
+      <span class="fl-icon">🔒</span>
+      <input type="password" id="admin-pass" placeholder="password" autocomplete="current-password">
+      <label>PASSWORD</label>
+    </div>
+
+    <div id="login-error"></div>
+
+    <button class="btn-auth ripple-btn" onclick="appAuth.login()">AUTHENTICATE</button>
+
+    <p style="text-align:center; margin-top:16px; font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">
+      No account? <a href="/login" style="color:var(--aqua); text-decoration:none;">Sign Up</a>
+    </p>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     MAIN VIEW (shown when authenticated)
+══════════════════════════════════ -->
+<div id="main-view" class="view-layer hidden">
+
+  <!-- ── NAVBAR ── -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <div class="hamburger" onclick="appNav.toggleDrawer()" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="nav-logo">NERION <span>AI</span></div>
+    </div>
+
+    <div class="nav-center">
+      <div class="live-dot"></div>
+      <span style="font-family:var(--font-mono); font-size:12px; color:var(--aqua); letter-spacing:1px;">LIVE</span>
+      <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">— SYSTEM CONNECTED</span>
+    </div>
+
+    <div class="nav-right">
+      <span id="nav-clock" style="font-family:var(--font-mono);">00:00:00</span>
+      <div class="nav-user-pill">
+        <div class="avatar" id="nav-avatar">A</div>
+        <span id="nav-username">Admin</span>
+      </div>
+      <button class="theme-toggle" id="theme-toggle" title="Toggle light/dark mode" onclick="appNav.toggleTheme()">🌙</button>
+      <span class="nav-bell" title="Notifications">🔔</span>
+    </div>
+  </nav>
+
+  <!-- ── APP BODY ── -->
+  <div class="app-body">
+
+    <!-- Sidebar overlay (mobile) -->
+    <div id="sidebar-overlay" class="hidden" onclick="appNav.toggleDrawer()"></div>
+
+    <!-- ── SIDEBAR ── -->
+    <aside id="sidebar">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar" id="sidebar-avatar">A</div>
+        <div class="sidebar-username" id="sidebar-username">Admin</div>
+      </div>
+
+      <ul class="sidebar-nav">
+        <li class="active" onclick="appNav.switchTab('tab-home', null); appNav.setActiveNav(this);"
+            style="animation-delay:0ms">
+          📊 Dashboard
+        </li>
+        <li onclick="appNav.switchTab('tab-ai', null); appNav.setActiveNav(this);"
+            style="animation-delay:50ms">
+          🧬 AI Medical Bay
+        </li>
+        <li onclick="appNav.switchTab('tab-vision', null); appNav.setActiveNav(this);"
+            style="animation-delay:100ms">
+          📷 Computer Vision
+        </li>
+
+        <div class="sidebar-sep"></div>
+
+        <li onclick="alert('Hardware pairing coming soon.');" style="animation-delay:150ms">
+          🔗 Pair Hardware
+        </li>
+        <li onclick="alert('Tank profiles coming soon.');" style="animation-delay:200ms">
+          🐠 Tank Profiles
+        </li>
+        <li onclick="alert('Water change log coming soon.');" style="animation-delay:250ms">
+          💧 Water Change Log
+        </li>
+        <li onclick="alert('System settings coming soon.');" style="animation-delay:300ms">
+          ⚙️ System Settings
+        </li>
+
+        <div class="sidebar-sep"></div>
+
+        <li class="nav-logout" onclick="appAuth.logout();" style="animation-delay:350ms">
+          🚪 Logout
+        </li>
+      </ul>
+
+      <div class="sidebar-version">v2.1.0 &nbsp;|&nbsp; Nerion OS</div>
+    </aside>
+
+    <!-- ── CONTENT AREA ── -->
+    <main class="content-area">
+
+      <!-- ════════ HOME TAB ════════ -->
+      <div id="tab-home" class="tab-content active">
+
+        <!-- Status Banner -->
+        <div class="status-banner status-nominal" id="status-banner">
+          <div class="status-indicator ok" id="status-indicator"></div>
+          <span id="status-text" style="font-family:var(--font-heading); font-size:15px; letter-spacing:2px; flex:1;">
+            SYSTEM NOMINAL
+          </span>
+          <div class="status-params" id="status-params">
+            <span>Checking parameters…</span>
+          </div>
+          <button id="emergency-btn" class="hidden ripple-btn" onclick="appAlerts.showEmergencyModal()">
+            ⚠ EMERGENCY PROTOCOL
+          </button>
+        </div>
+
+        <!-- Sensor Grid -->
+        <div class="sensor-grid">
+
+          <!-- Temperature -->
+          <div class="sensor-card card-bracketed" id="card-temperature-wrap">
+            <div class="sensor-icon-label">🌡 Temperature</div>
+            <div class="sensor-value" id="card-temperature">--<span class="unit">°C</span></div>
+            <div class="gauge-ring" id="gauge-temperature"></div>
+            <div class="bar-bg"><div class="bar-fill" id="bar-temperature" style="width:0%;background:var(--blue);"></div></div>
+            <div class="sensor-footer">
+              <span>18–28°C</span>
+              <span class="trend-arrow" id="trend-temperature">→</span>
+            </div>
+          </div>
+
+          <!-- Ammonia -->
+          <div class="sensor-card card-bracketed" id="card-ammonia-wrap">
+            <div class="sensor-icon-label">⚗ Ammonia</div>
+            <div class="sensor-value" id="card-ammonia">--<span class="unit">ppm</span></div>
+            <div class="gauge-ring" id="gauge-ammonia"></div>
+            <div class="bar-bg"><div class="bar-fill" id="bar-ammonia" style="width:0%;background:var(--danger);"></div></div>
+            <div class="sensor-footer">
+              <span>0–0.25 ppm</span>
+              <span class="trend-arrow" id="trend-ammonia">→</span>
+            </div>
+          </div>
+
+          <!-- pH -->
+          <div class="sensor-card card-bracketed" id="card-ph-wrap">
+            <div class="sensor-icon-label">🧪 pH Level</div>
+            <div class="sensor-value" id="card-ph">--</div>
+            <div class="gauge-ring" id="gauge-ph"></div>
+            <div class="bar-bg"><div class="bar-fill" id="bar-ph" style="width:0%;background:var(--safe);"></div></div>
+            <div class="sensor-footer">
+              <span>6.5–8.5</span>
+              <span class="trend-arrow" id="trend-ph">→</span>
+            </div>
+          </div>
+
+          <!-- Turbidity -->
+          <div class="sensor-card card-bracketed" id="card-turbidity-wrap">
+            <div class="sensor-icon-label">💧 Turbidity</div>
+            <div class="sensor-value" id="card-turbidity">--<span class="unit">NTU</span></div>
+            <div class="gauge-ring" id="gauge-turbidity"></div>
+            <div class="bar-bg"><div class="bar-fill" id="bar-turbidity" style="width:0%;background:var(--aqua);"></div></div>
+            <div class="sensor-footer">
+              <span>0–10 NTU</span>
+              <span class="trend-arrow" id="trend-turbidity">→</span>
+            </div>
+          </div>
+
+        </div><!-- /sensor-grid -->
+
+        <!-- Chart Card -->
+        <div class="card chart-card card-bracketed">
+          <div class="card-header">
+            <span class="card-title">Water Quality Timeline</span>
+            <div class="card-live-dot"></div>
+          </div>
+
+          <div class="chart-toggles">
+            <button class="chart-toggle active" data-metric="temp"      onclick="appChart.toggle(0, this)">TEMP °C</button>
+            <button class="chart-toggle active" data-metric="ammonia"   onclick="appChart.toggle(1, this)">NH₃ ppm</button>
+            <button class="chart-toggle active" data-metric="ph"        onclick="appChart.toggle(2, this)">pH</button>
+            <button class="chart-toggle active" data-metric="turbidity" onclick="appChart.toggle(3, this)">TURBIDITY</button>
+          </div>
+
+          <div class="chart-wrap">
+            <canvas id="historyChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Data Feed Table -->
+        <div class="card card-bracketed">
+          <div class="card-header">
+            <span class="card-title">Sensor Data Feed</span>
+            <div class="card-live-dot"></div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="data-feed-table">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Temp °C</th>
+                  <th>pH</th>
+                  <th>Turbidity</th>
+                  <th>Ammonia</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="data-feed-body">
+                <tr><td colspan="6" style="text-align:center;color:var(--text-muted);font-family:var(--font-mono);font-size:12px;padding:20px;">
+                  Awaiting data…
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /tab-home -->
+
+
+      <!-- ════════ AI MEDICAL BAY TAB ════════ -->
+      <div id="tab-ai" class="tab-content">
+
+        <div class="card-header" style="margin-bottom:16px;">
+          <span style="font-family:var(--font-heading);font-size:13px;letter-spacing:2px;">🧬 AI MEDICAL BAY</span>
+        </div>
+
+        <div class="ai-bay-grid">
+
+          <!-- Left: Diagnosis Input -->
+          <div class="card card-bracketed">
+            <div class="card-header">
+              <span class="card-title">Diagnostic Console</span>
+              <!-- ECG line animation -->
+              <div class="ecg-line">
+                <svg width="200" height="24" viewBox="0 0 200 24" fill="none">
+                  <polyline points="0,12 20,12 30,4 40,20 50,12 70,12 80,2 90,22 100,12 120,12 130,6 140,18 150,12 170,12 180,4 190,20 200,12 220,12 230,4 240,20 250,12 270,12 280,2 290,22 300,12 320,12 330,6 340,18 350,12 370,12 380,4 390,20 400,12"
+                    stroke="var(--aqua)" stroke-width="1.5" stroke-opacity="0.55"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="select-wrap">
+              <select id="sim-species">
+                <option>Tilapia</option>
+                <option>Koi Carp</option>
+              </select>
+              <span class="select-arrow">▾</span>
+            </div>
+
+            <!-- Temperature slider -->
+            <div class="slider-group">
+              <div class="slider-header">
+                <span class="slider-label">Temperature (°C)</span>
+                <input type="number" class="slider-number" id="sim-temp" value="29.5" step="0.1" min="0" max="50">
+              </div>
+              <input type="range" id="slider-temp" min="0" max="50" step="0.1" value="29.5"
+                oninput="document.getElementById('sim-temp').value=this.value">
+            </div>
+
+            <!-- pH slider -->
+            <div class="slider-group">
+              <div class="slider-header">
+                <span class="slider-label">pH Level</span>
+                <input type="number" class="slider-number" id="sim-ph" value="7.1" step="0.1" min="0" max="14">
+              </div>
+              <input type="range" id="slider-ph" min="0" max="14" step="0.1" value="7.1"
+                oninput="document.getElementById('sim-ph').value=this.value">
+            </div>
+
+            <!-- Turbidity slider -->
+            <div class="slider-group">
+              <div class="slider-header">
+                <span class="slider-label">Turbidity (NTU)</span>
+                <input type="number" class="slider-number" id="sim-turbidity" value="15.0" step="0.1" min="0" max="100">
+              </div>
+              <input type="range" id="slider-turbidity" min="0" max="100" step="0.1" value="15.0"
+                oninput="document.getElementById('sim-turbidity').value=this.value">
+            </div>
+
+            <!-- Ammonia slider -->
+            <div class="slider-group">
+              <div class="slider-header">
+                <span class="slider-label">Ammonia (ppm)</span>
+                <input type="number" class="slider-number" id="sim-ammonia" value="1.2" step="0.1" min="0" max="10">
+              </div>
+              <input type="range" id="slider-ammonia" min="0" max="10" step="0.1" value="1.2"
+                oninput="document.getElementById('sim-ammonia').value=this.value">
+            </div>
+
+            <button class="btn-diagnose ripple-btn" id="diag-btn"
+              onclick="appAi.runDiagnosis()">RUN DIAGNOSIS</button>
+          </div>
+
+          <!-- Right: Results -->
+          <div class="card card-bracketed" id="ai-result-card">
+
+            <!-- Placeholder (shown before any diagnosis) -->
+            <div class="result-placeholder" id="result-placeholder">
+              <div class="fish-glyph">🐟</div>
+              <p>AWAITING ANALYSIS</p>
+              <p style="margin-top:8px;font-size:10px;opacity:0.5;">Enter values and run diagnosis</p>
+            </div>
+
+            <!-- Results content (hidden until diagnosis runs) -->
+            <div id="result-content" style="display:none;">
+
+              <span id="result-status-badge" class="result-status-badge healthy">HEALTHY</span>
+
+              <div id="res-disease" style="font-family:var(--font-heading);font-size:18px;color:var(--aqua);margin-bottom:12px;"></div>
+
+              <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);letter-spacing:1px;margin-bottom:4px;">
+                DANGER LEVEL: <span id="res-danger" style="color:var(--warning);"></span>
+              </div>
+              <div class="danger-meter" id="danger-meter">
+                <div class="danger-seg"></div>
+                <div class="danger-seg"></div>
+                <div class="danger-seg"></div>
+                <div class="danger-seg"></div>
+                <div class="danger-seg"></div>
+              </div>
+
+              <div class="result-block solution">
+                <div class="block-label">Action Plan</div>
+                <div id="res-solution"></div>
+              </div>
+
+              <div class="result-block precautions">
+                <div class="block-label">Precautions</div>
+                <div id="res-precautions"></div>
+              </div>
+
+              <!-- AI Explanation accordion -->
+              <div id="ai-explanation-wrap" style="display:none;">
+                <div class="accordion-header" onclick="appAi.toggleAccordion(this)">
+                  <span class="accordion-title">🤖 GROQ AI Report</span>
+                  <span class="accordion-arrow">▾</span>
+                </div>
+                <div class="accordion-body">
+                  <pre id="res-ai-explanation"></pre>
+                </div>
+              </div>
+
+            </div><!-- /result-content -->
+          </div><!-- /ai-result-card -->
+
+        </div><!-- /ai-bay-grid -->
+      </div><!-- /tab-ai -->
+
+
+      <!-- ════════ COMPUTER VISION TAB ════════ -->
+      <div id="tab-vision" class="tab-content">
+
+        <div class="card-header" style="margin-bottom:16px;">
+          <span style="font-family:var(--font-heading);font-size:13px;letter-spacing:2px;">📷 VISUAL ANALYSIS MODULE</span>
+        </div>
+
+        <div class="card card-bracketed vision-outer">
+
+          <div class="viewfinder">
+            <div class="viewfinder-frame">
+              <div class="viewfinder-tl"></div>
+              <div class="viewfinder-tr"></div>
+              <div class="viewfinder-bl"></div>
+              <div class="viewfinder-br"></div>
+            </div>
+            <div class="radar-sweep"></div>
+            <div class="radar-rings"></div>
+            <div class="vision-offline-badge">
+              <span class="dot"></span> OFFLINE
+            </div>
+            <div class="vision-label">VISUAL ANALYSIS MODULE</div>
+          </div>
+
+          <div class="vision-metrics">
+            <div class="vision-metric">
+              <div class="vision-metric-label">Disease Detection</div>
+              <div class="vision-metric-val">--</div>
+            </div>
+            <div class="vision-metric">
+              <div class="vision-metric-label">Fish Count</div>
+              <div class="vision-metric-val">--</div>
+            </div>
+            <div class="vision-metric">
+              <div class="vision-metric-label">Anomaly Score</div>
+              <div class="vision-metric-val">--</div>
+            </div>
+          </div>
+
+          <div class="vision-footer">
+            Hardware integration required — See sidebar to pair a device
+          </div>
+        </div>
+
+      </div><!-- /tab-vision -->
+
+    </main><!-- /content-area -->
+  </div><!-- /app-body -->
+
+  <!-- ── BOTTOM TABS (mobile) ── -->
+  <nav class="bottom-tabs">
+    <div class="tab-btn active" onclick="appNav.switchTab('tab-home', this)">
+      <span class="tab-icon">📊</span>
+      <span class="tab-label">Home</span>
+    </div>
+    <div class="tab-btn" onclick="appNav.switchTab('tab-ai', this)">
+      <span class="tab-icon">🧬</span>
+      <span class="tab-label">AI Bay</span>
+    </div>
+    <div class="tab-btn" onclick="appNav.switchTab('tab-vision', this)">
+      <span class="tab-icon">📷</span>
+      <span class="tab-label">Vision</span>
+    </div>
+  </nav>
+
+  <!-- ── EMERGENCY MODAL ── -->
+  <div id="emergency-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span class="modal-warning-icon">⚠️</span>
+        <span class="modal-title">EMERGENCY PROTOCOL</span>
+      </div>
+
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" onchange="this.closest('li').classList.toggle('checked', this.checked)">
+          Stop feeding immediately
+        </li>
+        <li>
+          <input type="checkbox" onchange="this.closest('li').classList.toggle('checked', this.checked)">
+          Perform 30% water change
+        </li>
+        <li>
+          <input type="checkbox" onchange="this.closest('li').classList.toggle('checked', this.checked)">
+          Add ammonia binder (dose per label)
+        </li>
+        <li>
+          <input type="checkbox" onchange="this.closest('li').classList.toggle('checked', this.checked)">
+          Increase aeration / surface agitation
+        </li>
+        <li>
+          <input type="checkbox" onchange="this.closest('li').classList.toggle('checked', this.checked)">
+          Monitor for next 30 minutes
+        </li>
+      </ul>
+
+      <div class="modal-footer">
+        <button class="btn-modal-primary ripple-btn" onclick="appAlerts.hideEmergencyModal()">
+          MARK RESOLVED
+        </button>
+        <button class="btn-modal-dismiss ripple-btn" onclick="appAlerts.hideEmergencyModal()">
+          DISMISS
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main-view -->
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+
+<!-- Sync sliders with number inputs -->
+<script>
+  ['temp','ph','turbidity','ammonia'].forEach(function(k) {
+    var num = document.getElementById('sim-' + k);
+    var rng = document.getElementById('slider-' + k);
+    if (num && rng) {
+      num.addEventListener('input', function() { rng.value = this.value; });
+    }
+  });
+
+  /* ── Theme toggle ── */
+  appNav = appNav || {};
+  appNav.toggleTheme = function() {
+    var html = document.documentElement;
+    var btn  = document.getElementById('theme-toggle');
+    var isLight = html.getAttribute('data-theme') === 'light';
+    if (isLight) {
+      html.removeAttribute('data-theme');
+      if (btn) btn.textContent = '🌙';
+      localStorage.setItem('nerion_theme', 'dark');
+    } else {
+      html.setAttribute('data-theme', 'light');
+      if (btn) btn.textContent = '☀️';
+      localStorage.setItem('nerion_theme', 'light');
+    }
+  };
+
+  /* restore saved theme */
+  (function() {
+    var saved = localStorage.getItem('nerion_theme');
+    if (saved === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+      var btn = document.getElementById('theme-toggle');
+      if (btn) btn.textContent = '☀️';
+    }
+  })();
+</script>
+
 </body>
 </html>
