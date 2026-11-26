@@ -255,9 +255,9 @@ Keep each section to 2-3 sentences. Use plain language suitable for a fish farm 
 
     try:
         response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model="openai/gpt-oss-20b",
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=500,
+            max_tokens=1200,
             temperature=0.7,
         )
         return response.choices[0].message.content.strip()
